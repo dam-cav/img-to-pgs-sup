@@ -51,7 +51,7 @@ def getBorderOnlyImage(img):
   upperb = numpy.array([15, 15, 15])
   binary = cv2.inRange(gradient, lowerb, upperb)
 
-  # back yo pillow format
+  # back to pillow format
   return Image.fromarray(binary).convert('RGBA')
 
 def addBorderToImage(image):
