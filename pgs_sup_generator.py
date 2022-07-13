@@ -80,6 +80,7 @@ def main():
       continue
 
     image = mergeImageGroupVertically(group, path=ARGS.path, limiter=LIMITER)
+    image = image.convert('RGB')
     image = addBorderToImage(image)
 
     time_match = re.search(
