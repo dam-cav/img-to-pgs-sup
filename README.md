@@ -2,7 +2,9 @@
 
 PGS SUP subtitle generator (Image sequences)
 
-It generates subtitles starting from a series of white-background black-content  images (`png/jpg` format)
+It generates subtitles starting from a series of white-background black-content images (`png/jpg` format)
+
+A real case where it can be useful is when extracting images of hardsub subtitles using [VideoSubFinder](https://sourceforge.net/projects/videosubfinder/): these images often contain text easily recognizable by a human but not always correctly identified by Tesseract. In this case, it can be helpful to reduce the space occupied by the sequence of images while still making them usable in a video by converting them into a PGS subtitle file
 
 Each image must have the name in the format
 `HH_mm_ss_SSS__HH_mm_ss_SSS_XXXXX.extension`, where:
@@ -11,20 +13,21 @@ Each image must have the name in the format
 - the last `HH_mm_ss_SSS` is the end time
 - `XXXXX` is the sequence number
 
-A script to correct times and durations is included in the project.
+A script to correct times and durations of generated subtitles is also included in the project.
 
 # FAQ
 
 ## Why not simply use an OCR to generate an SRT file?
 
-- You don't always have to do with well defined images
-- You don't always have to do with images containing text
+- You don't always have to deal with well defined images
+- You don't always have to deal with images containing text
 
 When you can, prefer subtitles in text format (like SRT)
 
 ## If you don't want to use an OCR, why is there a "tesseract" option?
 
-If you have a list of images and not all of them include texts, you may want to filter those in which tesseract manages to recognize at least one character of the alphabet
+If you have a list of images and not all of them include texts, you may want to filter those in which tesseract manages to recognize at least one character of the alphabet \
+In this way, it is possible to exclude images that do not contain any text at all and, at the same time, not rely 100% on the entire Tesseract output
 
 ## How are the images coded inside the PGS SUP file?
 
