@@ -1,0 +1,17 @@
+name: Package pgs_sup_generator exe with PyInstaller - Windows
+
+on:
+  push:
+    branches: [ master, dev ]
+
+jobs:
+  pyinstaller-build:
+    runs-on: windows-latest
+    steps:
+      - name: Create Executable
+        uses: sayyid5416/pyinstaller@v1
+        with:
+          python_ver: '3.12.1'
+          spec: 'pgs-sup-generator/pgs_sup_generator.spec'
+          requirements: 'pgs-sup-generator/requirements.txt'
+          upload_exe_with_name: 'pgs-sup-generator'
