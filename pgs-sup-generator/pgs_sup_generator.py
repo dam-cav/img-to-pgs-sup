@@ -7,23 +7,13 @@ import platform
 from lib.image_manipulation import *
 from lib.sub_manipulation import *
 
-parser = argparse.ArgumentParser(description='Image directory to PGS SUP file generator.')
-
-parser.add_argument("-p",  "--path",      help="image directory path",  default=".")
-parser.add_argument("-wi", "--width",     help="video width in px",     default="1280")
-parser.add_argument("-he", "--height",    help="video height in px",    default="720")
-parser.add_argument("-o",  "--outfile",   help="output filename",       default="sub.sup")
-parser.add_argument("-t",  "--tesseract", help="tesseract binary path", default=None)
-
 LIMITER = "\\" if platform.system() == "Windows" else '/'
-ARGS = parser.parse_args()
-# NOTE: do not exceed with size since PGS data block is very limited
-SIZELIMIT = int(ARGS.width),  int(ARGS.height)
-pytesseract.pytesseract.tesseract_cmd = ARGS.tesseract
 
-def filterWithTesseract(file):
+def filterWithTesseract(path, file, tesseract):
+  pytesseract.pytesseract.tesseract_cmd = tesseract
+
   try:
-    im = Image.open(ARGS.path + LIMITER + file)
+    im = Image.open(path + LIMITER + file)
   except IOError:
     print("cannot open image '%s'" % filename)
 
@@ -35,8 +25,20 @@ def filterWithTesseract(file):
   return file
 
 def main():
+  parser = argparse.ArgumentParser(description='Image directory to PGS SUP file generator.')
+
+  parser.add_argument("-p",  "--path",      help="image directory path",  default=".")
+  parser.add_argument("-wi", "--width",     help="video width in px",     default="1280")
+  parser.add_argument("-he", "--height",    help="video height in px",    default="720")
+  parser.add_argument("-o",  "--outfile",   help="output filename",       default="sub.sup")
+  parser.add_argument("-t",  "--tesseract", help="tesseract binary path", default=None)
+
+  ARGS = parser.parse_args()
+  # NOTE: do not exceed with size since PGS data block is very limited
+  sizelimit = int(ARGS.width), int(ARGS.height)
+
   dir_list = os.listdir(ARGS.path)
-  dir_list = [file for file in dir_list if not not re.match('[0-9]{1,2}_[0-9]{1,2}_[0-9]{1,2}_[0-9]{1,3}__[0-9]{1,2}_[0-9]{1,2}_[0-9]{1,2}_[0-9]{1,3}_[0-9]{1,5}.(jpe?g|png)', file)]
+  dir_list = [file for file in dir_list if not not re.match('[0-9]{1,2}_[0-9]{1,2}_[0-9]{1,2}_[0-9]{1,3}__[0-9]{1,2}_[0-9]{1,2}_[0-9]{1,2}_[0-9]{1,3}_[0-9]+.(jpe?g|png)', file)]
   dir_list.sort()
 
   counter = 0
@@ -45,7 +47,7 @@ def main():
 
   for file in dir_list:
     time_match = re.search(
-      '([0-9]{1,2})_([0-9]{1,2})_([0-9]{1,2})_([0-9]{1,3})__([0-9]{1,2})_([0-9]{1,2})_([0-9]{1,2})_([0-9]{1,3})_[0-9]{1,5}.(jpe?g|png)',
+      '([0-9]{1,2})_([0-9]{1,2})_([0-9]{1,2})_([0-9]{1,3})__([0-9]{1,2})_([0-9]{1,2})_([0-9]{1,2})_([0-9]{1,3})_[0-9]+.(jpe?g|png)',
       file
     )
 
@@ -71,8 +73,8 @@ def main():
 
     if ARGS.tesseract:
       # NOTE slowest part, make it multithread
-      a_pool = multiprocessing.Pool()
-      group = a_pool.map(filterWithTesseract, group)
+      a_pool = multiprocessing.Pool(processes=(multiprocessing.cpu_count()-1) or 1)
+      group = a_pool.starmap(filterWithTesseract, [(ARGS.path, file, ARGS.tesseract) for file in group])
     group = list(filter(None, group))
 
     if len(group) == 0:
@@ -91,11 +93,12 @@ def main():
     start_time = int(time_match.group(1))
     end_time   = int(time_match.group(2))
 
-    sub += generateFrame(file, image, start_time, end_time, counter, SIZELIMIT)
+    sub += generateFrame(file, image, start_time, end_time, counter, sizelimit)
     counter += 1
 
   with open(ARGS.outfile, "wb") as f:
   	f.write(sub)
 
 if __name__ == "__main__":
+  multiprocessing.freeze_support()
   main()
